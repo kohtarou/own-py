@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>ダイヤ獲得数まとめ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #data-display {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>ダイヤ獲得数まとめ</h1>
+    <button onclick="fetchData()">データを取得</button>
+    <div id="data-display"></div>
+
+    <h2>イベントを追加</h2>
+    <form id="add-event-form">
+        
+    </form>
+
+    <h2>イベントごとのダイヤ獲得数</h2>
+    <canvas id="eventChart" width="400" height="200"></canvas>
+
+    <script>
+        function fetchData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    const displayDiv = document.getElementById('data-display');
+                    displayDiv.innerHTML = JSON.stringify(data, null, 2);
+                    plotEventTotals(data);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function plotEventTotals(data) {
+            const events = {};
+            for (const year in data) {
+                for (const month in data[year]) {
+                    if (month === 'total') continue;
+                    for (const day in data[year][month]) {
+                        const details = data[year][month][day];
+                        for (const event of details.events) {
+                            if (!events[event.description]) {
+                                events[event.description] = 0;
+                            }
+                            events[event.description] += event.diamonds;
+                        }
+                    }
+                }
+            }
+
+            const ctx = document.getElementById('eventChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(events),
+                    datasets: [{
+                        label: 'ダイヤ獲得数',
+                        data: Object.values(events),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('add-event-form').addEventListener('submit', function(event) {
+            
+        });
+    </script>
+</body>
+
+</html>
